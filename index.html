@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Josua & Aimy Jane’s Wedding</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fffaf9;
+      padding: 20px;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #b85c5c;
+    }
+    .section {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #eee;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #b85c5c;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyANWALO0VCY1L0CU6a93iOMgLtOXpvJFQU",
+      authDomain: "wedding-invitation-545f6.firebaseapp.com",
+      projectId: "wedding-invitation-545f6",
+      storageBucket: "wedding-invitation-545f6.appspot.com",
+      messagingSenderId: "434714176514",
+      appId: "1:434714176514:web:20f327bf5be72dac628b1b",
+      measurementId: "G-CVGCJ2QE53"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+  </script>
+</head>
+<body>
+
+  <h1>💒 Josua & Aimy Jane</h1>
+  <h2>Wedding Guest Entry</h2>
+
+  <div class="section">
+    <h3>📝 Add Your Entry</h3>
+    <input type="text" id="guestName" placeholder="Guest's Full Name">
+    <input id="companions" placeholder="Who are you bringing? (e.g. My wife Anna and our 2 kids)">
+    <input type="number" id="totalPeople" placeholder="Total number of people (including you)">
+    <button onclick="addGuest()">Submit</button>
+  </div>
+
+  <script>
+    function validateInput(name, total) {
+      if (!name || name.length < 2) {
+        alert("❗ Please enter your full name (at least 2 characters).");
+        return false;
+      }
+
+      const num = Number(total);
+      if (!num || num <= 0) {
+        alert("❗ Total number of people must be a positive number.");
+        return false;
+      }
+
+      return true;
+    }
+
+    function confirmData(name, companions, total) {
+      const message =
+        `✅ Please confirm your details:\n\n` +
+        `👤 Name: ${name}\n` +
+        `🧑‍🤝‍🧑 Companions: ${companions || "None"}\n` +
+        `🔢 Total people: ${total}\n\n` +
+        `Is this correct?`;
+
+      return confirm(message);
+    }
+
+    async function checkDuplicateName(name) {
+      const snapshot = await database.ref("guests").once("value");
+      const guests = snapshot.val();
+      if (!guests) return false;
+
+      return Object.values(guests).some(guest =>
+        guest.name.trim().toLowerCase() === name.trim().toLowerCase()
+      );
+    }
+
+    async function addGuest() {
+      const name = document.getElementById("guestName").value.trim();
+      const companions = document.getElementById("companions").value.trim();
+      const total = document.getElementById("totalPeople").value;
+
+      if (!validateInput(name, total)) return;
+
+      const isDuplicate = await checkDuplicateName(name);
+      if (isDuplicate) {
+        alert("🚫 This name has already been used. Please use your full name or contact us.");
+        return;
+      }
+
+      if (!confirmData(name, companions, total)) return;
+
+      const guestData = {
+        name,
+        companions: companions || "No companions listed",
+        total: Number(total),
+        timestamp: Date.now()
+      };
+
+      try {
+        await database.ref("guests").push(guestData);
+        alert("🎉 Thank you! Your entry has been submitted.");
+      } catch (err) {
+        alert("❌ Something went wrong. Please try again later.");
+        console.error(err);
+      }
+
+      document.getElementById("guestName").value = '';
+      document.getElementById("companions").value = '';
+      document.getElementById("totalPeople").value = '';
+    }
+  </script>
+</body>
+</html>
