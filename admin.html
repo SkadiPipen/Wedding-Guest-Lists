@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guest List Admin</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0px 0px 10px #aaa;
+      border-radius: 10px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .guest-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .guest-item strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .total {
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Guest Lists</h2>
+    <div id="guestList"></div>
+    <div class="total" id="totalGuests">Total Guests: 0</div>
+  </div>
+
+  <script>
+    // Replace with your actual Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyANWALO0VCY1L0CU6a93iOMgLtOXpvJFQU",
+      authDomain: "wedding-invitation-545f6.firebaseapp.com",
+      projectId: "wedding-invitation-545f6",
+      storageBucket: "wedding-invitation-545f6.appspot.com",
+      messagingSenderId: "434714176514",
+      appId: "1:434714176514:web:20f327bf5be72dac628b1b",
+      measurementId: "G-CVGCJ2QE53"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function loadGuests() {
+    const guestList = $("#guestList");
+    let totalCount = 0;
+
+    db.ref("guests").once("value", function(snapshot) {
+        guestList.empty(); // Clear old data
+        snapshot.forEach(function(childSnapshot) {
+        const guest = childSnapshot.val();
+        const name = guest.name || "Unnamed Guest";
+        const total = parseInt(guest.total) || 1;
+        const companionsText = guest.companions ? `Companions: ${guest.companions}` : "No companions";
+        totalCount += total;
+
+        guestList.append(`
+            <div class="guest-item">
+            <strong>${name}</strong>
+            ${companionsText} | Total: ${total}
+            </div>
+        `);
+        });
+        $("#totalGuests").text("Total Guests (including companions): " + totalCount);
+    });
+    }
+
+
+    $(document).ready(function() {
+      loadGuests();
+    });
+  </script>
+</body>
+</html>
